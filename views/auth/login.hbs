@@ -1,0 +1,62 @@
+<div class="auth-card">
+    <div class="auth-logo">
+        <div class="logo-icon"><i class="fas fa-car-side"></i></div>
+        <h1>Đăng nhập</h1>
+        <p>Chào mừng trở lại! Hãy đăng nhập để tiếp tục.</p>
+    </div>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="email">Email <span class="required">*</span></label>
+            <div class="input-wrapper">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" class="form-control" required placeholder="you@example.com"
+                    autocomplete="email">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="password">Mật khẩu <span class="required">*</span></label>
+            <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" class="form-control" required placeholder="••••••••"
+                    autocomplete="current-password">
+            </div>
+        </div>
+        <button type="submit" class="btn-auth" id="submitBtn">
+            <i class="fas fa-sign-in-alt"></i> Đăng nhập
+        </button>
+    </form>
+    <div class="auth-footer">
+        Chưa có tài khoản? <a href="/auth/register">Đăng ký ngay</a>
+    </div>
+</div>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+        try {
+            var r = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            var res = await r.json();
+            if (r.ok) {
+                showToast('Đăng nhập thành công! Xin chào ' + res.user.username, 'success');
+                setTimeout(function () { window.location.href = '/'; }, 1000);
+            } else {
+                showToast(res.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+            }
+        } catch (err) {
+            showToast('Lỗi kết nối server', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
+        }
+    });
+</script>

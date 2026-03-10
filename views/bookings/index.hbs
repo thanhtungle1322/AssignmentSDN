@@ -1,0 +1,124 @@
+<div class="animate-in">
+    <div class="glass-card">
+        <div class="section-header">
+            <h2><i class="fas fa-calendar-check"></i> Danh sách đặt xe</h2>
+            <a href="/bookings/create" class="btn btn-primary"><i class="fas fa-plus"></i> Tạo đơn đặt mới</a>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th># Mã đơn</th>
+                        <th><i class="fas fa-user"></i> Khách hàng</th>
+                        <th><i class="fas fa-car"></i> Biển số xe</th>
+                        <th><i class="fas fa-calendar"></i> Ngày bắt đầu</th>
+                        <th><i class="fas fa-calendar-times"></i> Ngày kết thúc</th>
+                        <th><i class="fas fa-money-bill"></i> Tổng tiền</th>
+                        <th><i class="fas fa-circle-check"></i> Trạng thái</th>
+                        <th><i class="fas fa-clock"></i> Nhận xe lúc</th>
+                        <th><i class="fas fa-cog"></i> Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if bookings.length}}
+                    {{#each bookings}}
+                    <tr style="animation: fadeInUp 0.4s ease-out {{multiply @index 0.05}}s both;">
+                        <td><code
+                                style="background: rgba(108,99,255,0.1); padding: 2px 8px; border-radius: 4px; color: var(--accent-primary); font-size: 0.75rem;">{{shortId this._id}}</code>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div
+                                    style="width: 32px; height: 32px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: #fff;">
+                                    {{initial this.customerName}}
+                                </div>
+                                <span>{{this.customerName}}</span>
+                            </div>
+                        </td>
+                        <td><strong style="color: var(--accent-info);">{{this.carNumber}}</strong></td>
+                        <td>{{formatDate this.startDate}}</td>
+                        <td>{{formatDate this.endDate}}</td>
+                        <td>
+                            <strong style="color: var(--accent-secondary);">{{formatNumber this.totalAmount}}</strong>
+                            <span style="color: var(--text-muted); font-size: 0.8rem;"> VND</span>
+                        </td>
+                        <td>
+                            {{#eq this.status "chờ đón"}}
+                            <span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> Chờ đón</span>
+                            {{/eq}}
+                            {{#eq this.status "đã đón"}}
+                            <span class="badge badge-picked"><i class="fas fa-check"></i> Đã đón</span>
+                            {{/eq}}
+                            {{#eq this.status "hoàn thành"}}
+                            <span class="badge badge-completed"><i class="fas fa-flag-checkered"></i> Hoàn thành</span>
+                            {{/eq}}
+                            {{#eq this.status "huỷ"}}
+                            <span class="badge badge-cancelled"><i class="fas fa-ban"></i> Huỷ</span>
+                            {{/eq}}
+                        </td>
+                        <td>
+                            {{#if this.pickupAt}}
+                            <span style="color: var(--accent-secondary); font-size: 0.85rem;">{{formatDateTime
+                                this.pickupAt}}</span>
+                            {{else}}
+                            <span style="color: var(--text-muted);">—</span>
+                            {{/if}}
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="/bookings/edit/{{this._id}}" class="btn btn-secondary btn-sm"><i
+                                        class="fas fa-edit"></i></a>
+                                {{#eq this.status "chờ đón"}}
+                                <button class="btn btn-success btn-sm"
+                                    onclick="pickupCar('{{this._id}}', '{{this.customerName}}')"><i
+                                        class="fas fa-key"></i></button>
+                                {{/eq}}
+                                <button class="btn btn-danger btn-sm" onclick="deleteBooking('{{this._id}}')"><i
+                                        class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                    {{else}}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-xmark"></i>
+                                <h3>Chưa có đơn đặt nào</h3>
+                                <p>Hãy tạo đơn đặt xe đầu tiên</p>
+                                <a href="/bookings/create" class="btn btn-primary"><i class="fas fa-plus"></i> Tạo đơn
+                                    đặt mới</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    async function pickupCar(bookingId, customerName) {
+        if (!confirm('Xác nhận nhận xe cho khách ' + customerName + '?')) return;
+        document.cookie = 'customerName=' + encodeURIComponent(customerName) + '; path=/';
+        try {
+            var response = await fetch('/bookings/' + bookingId + '/pickup', { method: 'PATCH' });
+            var result = await response.json();
+            if (response.ok) {
+                showToast('Nhận xe thành công!', 'success');
+                setTimeout(function () { window.location.reload(); }, 1000);
+            } else { showToast('Lỗi: ' + result.message, 'error'); }
+        } catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+    }
+    async function deleteBooking(bookingId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa đơn đặt xe này?')) return;
+        try {
+            var response = await fetch('/bookings/' + bookingId, { method: 'DELETE' });
+            var result = await response.json();
+            if (response.ok) {
+                showToast('Đã xóa đơn đặt xe thành công!', 'success');
+                setTimeout(function () { window.location.reload(); }, 1000);
+            } else { showToast('Lỗi: ' + result.message, 'error'); }
+        } catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+    }
+</script>

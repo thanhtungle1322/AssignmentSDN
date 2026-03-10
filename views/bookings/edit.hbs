@@ -1,0 +1,79 @@
+<div class="animate-in" style="max-width: 700px; margin: 0 auto;">
+    <div class="glass-card">
+        <div class="section-header" style="margin-bottom: 2rem;">
+            <h2><i class="fas fa-edit"></i> Sửa đơn đặt xe</h2>
+            <a href="/bookings" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+        <div class="info-box" style="margin-bottom: 1.5rem;">
+            <h4><i class="fas fa-info-circle"></i> Thông tin đơn hiện tại</h4>
+            <p>Mã đơn: <code
+                    style="background: rgba(108,99,255,0.1); padding: 2px 8px; border-radius: 4px; color: var(--accent-primary);">{{booking._id}}</code>
+            </p>
+            <p>Tổng tiền: <strong style="color: var(--accent-secondary);">{{formatNumber booking.totalAmount}}
+                    VND</strong></p>
+            <p>Trạng thái:
+                {{#eq booking.status "chờ đón"}}<span class="badge badge-pending"><i class="fas fa-hourglass-half"></i>
+                    Chờ đón</span>{{/eq}}
+                {{#eq booking.status "đã đón"}}<span class="badge badge-picked"><i class="fas fa-check"></i> Đã
+                    đón</span>{{/eq}}
+                {{#eq booking.status "hoàn thành"}}<span class="badge badge-completed"><i
+                        class="fas fa-flag-checkered"></i> Hoàn thành</span>{{/eq}}
+                {{#eq booking.status "huỷ"}}<span class="badge badge-cancelled"><i class="fas fa-ban"></i>
+                    Huỷ</span>{{/eq}}
+            </p>
+            {{#if booking.pickupAt}}
+            <p>Nhận xe lúc: <strong>{{formatDateTime booking.pickupAt}}</strong></p>
+            {{/if}}
+        </div>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="customerName">Tên khách hàng <span class="required">*</span></label>
+                <input type="text" id="customerName" class="form-control" required value="{{booking.customerName}}">
+            </div>
+            <div class="form-group">
+                <label for="carNumber">Chọn xe <span class="required">*</span></label>
+                <select id="carNumber" class="form-control" required>
+                    {{#each cars}}
+                    <option value="{{this.carNumber}}" data-price="{{this.pricePerDay}}" {{#eq this.carNumber
+                        ../booking.carNumber}}selected{{/eq}}>
+                        {{this.carNumber}} — {{this.capacity}} chỗ — {{formatNumber this.pricePerDay}} VND/ngày
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="startDate">Ngày bắt đầu <span class="required">*</span></label>
+                    <input type="date" id="startDate" class="form-control" required
+                        value="{{dateToISO booking.startDate}}">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">Ngày kết thúc <span class="required">*</span></label>
+                    <input type="date" id="endDate" class="form-control" required value="{{dateToISO booking.endDate}}">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Cập nhật đơn</button>
+                <a href="/bookings" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('bookingForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var bookingId = '{{booking._id}}';
+        var data = {
+            customerName: document.getElementById('customerName').value,
+            carNumber: document.getElementById('carNumber').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value
+        };
+        try {
+            var r = await fetch('/bookings/' + bookingId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            var res = await r.json();
+            if (r.ok) { showToast('Cập nhật thành công! Tổng mới: ' + res.totalAmount.toLocaleString() + ' VND', 'success'); setTimeout(function () { window.location.href = '/bookings'; }, 1500); }
+            else { showToast('Lỗi: ' + res.message, 'error'); }
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+    });
+</script>

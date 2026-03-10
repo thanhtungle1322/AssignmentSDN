@@ -1,0 +1,98 @@
+<div class="animate-in" style="max-width: 700px; margin: 0 auto;">
+    <div class="glass-card">
+        <div class="section-header" style="margin-bottom: 2rem;">
+            <h2><i class="fas fa-plus-circle"></i> Tạo đơn đặt xe</h2>
+            <a href="/bookings" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="customerName">Tên khách hàng <span class="required">*</span></label>
+                <input type="text" id="customerName" class="form-control" required placeholder="VD: Nguyễn Văn A">
+            </div>
+            <div class="form-group">
+                <label for="carNumber">Chọn xe <span class="required">*</span></label>
+                <select id="carNumber" class="form-control" required onchange="updatePriceInfo()">
+                    <option value="">— Chọn một xe —</option>
+                    {{#each cars}}
+                    <option value="{{this.carNumber}}" data-price="{{this.pricePerDay}}"
+                        data-capacity="{{this.capacity}}" data-features="{{joinArray this.features}}">
+                        {{this.carNumber}} — {{this.capacity}} chỗ — {{formatNumber this.pricePerDay}} VND/ngày
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="info-box" id="carInfoBox" style="display: none;">
+                <h4><i class="fas fa-car"></i> Thông tin xe</h4>
+                <p>Số chỗ: <strong id="carCapacity"></strong></p>
+                <p>Tính năng: <span id="carFeatures"></span></p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="startDate">Ngày bắt đầu <span class="required">*</span></label>
+                    <input type="date" id="startDate" class="form-control" required onchange="calculateTotal()">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">Ngày kết thúc <span class="required">*</span></label>
+                    <input type="date" id="endDate" class="form-control" required onchange="calculateTotal()">
+                </div>
+            </div>
+            <div class="info-box" id="priceInfo"
+                style="display: none; border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.08);">
+                <h4 style="color: var(--accent-secondary);"><i class="fas fa-calculator"></i> Tính tiền</h4>
+                <p>Giá thuê/ngày: <strong><span id="pricePerDay">0</span> VND</strong></p>
+                <p>Số ngày thuê: <strong><span id="numDays">0</span> ngày</strong></p>
+                <p class="highlight" style="margin-top: 8px; font-size: 1.1rem;">💰 Tổng tiền: <span
+                        id="totalAmount">0</span> VND</p>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Tạo đơn đặt xe</button>
+                <a href="/bookings" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function updatePriceInfo() {
+        var sel = document.getElementById('carNumber');
+        var opt = sel.options[sel.selectedIndex];
+        var box = document.getElementById('carInfoBox');
+        if (opt.value) {
+            document.getElementById('carCapacity').textContent = opt.dataset.capacity + ' chỗ';
+            document.getElementById('carFeatures').textContent = opt.dataset.features || 'Không có';
+            box.style.display = 'block';
+            document.getElementById('pricePerDay').textContent = parseInt(opt.dataset.price).toLocaleString();
+            calculateTotal();
+        } else { box.style.display = 'none'; }
+    }
+    function calculateTotal() {
+        var sel = document.getElementById('carNumber');
+        var opt = sel.options[sel.selectedIndex];
+        var s = document.getElementById('startDate').value;
+        var e = document.getElementById('endDate').value;
+        var pi = document.getElementById('priceInfo');
+        if (opt.value && s && e) {
+            var price = parseInt(opt.dataset.price);
+            var days = Math.ceil(Math.abs(new Date(e) - new Date(s)) / 86400000);
+            if (days > 0) {
+                document.getElementById('numDays').textContent = days;
+                document.getElementById('totalAmount').textContent = (days * price).toLocaleString();
+                pi.style.display = 'block';
+            }
+        } else { pi.style.display = 'none'; }
+    }
+    document.getElementById('bookingForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var data = {
+            customerName: document.getElementById('customerName').value,
+            carNumber: document.getElementById('carNumber').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value
+        };
+        try {
+            var r = await fetch('/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            var res = await r.json();
+            if (r.ok) { showToast('Tạo đơn thành công! Tổng: ' + res.totalAmount.toLocaleString() + ' VND', 'success'); setTimeout(function () { window.location.href = '/bookings'; }, 1500); }
+            else { showToast('Lỗi: ' + res.message, 'error'); }
+        } catch (err) { showToast('Lỗi: ' + err.message, 'error'); }
+    });
+</script>

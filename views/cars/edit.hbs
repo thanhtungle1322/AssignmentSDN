@@ -1,0 +1,64 @@
+<div class="animate-in" style="max-width: 700px; margin: 0 auto;">
+    <div class="glass-card">
+        <div class="section-header" style="margin-bottom: 2rem;">
+            <h2><i class="fas fa-edit"></i> Sửa xe: {{car.carNumber}}</h2>
+            <a href="/cars" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+        <form id="carForm">
+            <div class="form-group">
+                <label for="carNumber">Biển số xe</label>
+                <input type="text" id="carNumber" class="form-control" value="{{car.carNumber}}" disabled
+                    style="opacity: 0.6;">
+                <p class="form-hint"><i class="fas fa-lock"></i> Biển số xe không thể thay đổi</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="capacity">Số chỗ ngồi <span class="required">*</span></label>
+                    <input type="number" id="capacity" class="form-control" required min="1" value="{{car.capacity}}">
+                </div>
+                <div class="form-group">
+                    <label for="pricePerDay">Giá thuê/Ngày (VND) <span class="required">*</span></label>
+                    <input type="number" id="pricePerDay" class="form-control" required min="0"
+                        value="{{car.pricePerDay}}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="status">Trạng thái <span class="required">*</span></label>
+                <select id="status" class="form-control" required>
+                    <option value="available" {{#eq car.status "available" }}selected{{/eq}}>🟢 Sẵn sàng</option>
+                    <option value="rented" {{#eq car.status "rented" }}selected{{/eq}}>🟡 Đang thuê</option>
+                    <option value="maintenance" {{#eq car.status "maintenance" }}selected{{/eq}}>🔴 Bảo trì</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="features">Tính năng</label>
+                <input type="text" id="features" class="form-control" value="{{joinArray car.features}}">
+                <p class="form-hint">Phân cách các tính năng bằng dấu phẩy</p>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Cập nhật xe</button>
+                <a href="/cars" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('carForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var carNumber = '{{car.carNumber}}';
+        var formData = {
+            capacity: parseInt(document.getElementById('capacity').value),
+            status: document.getElementById('status').value,
+            pricePerDay: parseInt(document.getElementById('pricePerDay').value),
+            features: document.getElementById('features').value.split(',').map(function (f) { return f.trim(); }).filter(function (f) { return f; })
+        };
+        try {
+            var response = await fetch('/cars/' + encodeURIComponent(carNumber), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+            var result = await response.json();
+            if (response.ok) {
+                showToast('Cập nhật xe ' + carNumber + ' thành công!', 'success');
+                setTimeout(function () { window.location.href = '/cars'; }, 1200);
+            } else { showToast('Lỗi: ' + result.message, 'error'); }
+        } catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+    });
+</script>

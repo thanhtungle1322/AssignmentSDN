@@ -1,0 +1,1 @@
+viet api nhận xe cùng với cookie, khi nhận xe thì ngày nhận xe phải lớn hơn hoặc bằng startdate, cập nhật booking status bằng đã đón và xét được cột pickup at= now

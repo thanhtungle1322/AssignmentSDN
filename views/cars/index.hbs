@@ -1,0 +1,95 @@
+<div class="animate-in">
+    <div class="glass-card">
+        <div class="section-header">
+            <h2><i class="fas fa-car"></i> Danh sách xe</h2>
+            <a href="/cars/create" class="btn btn-primary"><i class="fas fa-plus"></i> Thêm xe mới</a>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> Biển số</th>
+                        <th><i class="fas fa-users"></i> Chỗ ngồi</th>
+                        <th><i class="fas fa-circle-check"></i> Trạng thái</th>
+                        <th><i class="fas fa-money-bill"></i> Giá/Ngày</th>
+                        <th><i class="fas fa-list"></i> Tính năng</th>
+                        <th><i class="fas fa-cog"></i> Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if cars.length}}
+                    {{#each cars}}
+                    <tr style="animation: fadeInUp 0.4s ease-out {{multiply @index 0.05}}s both;">
+                        <td><strong style="color: var(--accent-primary);">{{this.carNumber}}</strong></td>
+                        <td><i class="fas fa-chair" style="color: var(--text-muted); margin-right: 4px;"></i>
+                            {{this.capacity}} chỗ</td>
+                        <td>
+                            {{#eq this.status "available"}}
+                            <span class="badge badge-available"><i class="fas fa-check-circle"></i> Sẵn sàng</span>
+                            {{/eq}}
+                            {{#eq this.status "rented"}}
+                            <span class="badge badge-rented"><i class="fas fa-key"></i> Đang thuê</span>
+                            {{/eq}}
+                            {{#eq this.status "maintenance"}}
+                            <span class="badge badge-maintenance"><i class="fas fa-wrench"></i> Bảo trì</span>
+                            {{/eq}}
+                        </td>
+                        <td>
+                            <strong style="color: var(--accent-secondary);">{{formatNumber this.pricePerDay}}</strong>
+                            <span style="color: var(--text-muted); font-size: 0.8rem;"> VND</span>
+                        </td>
+                        <td>
+                            {{#if this.features.length}}
+                            {{#each this.features}}
+                            <span class="feature-tag">{{this}}</span>
+                            {{/each}}
+                            {{else}}
+                            <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+                            {{/if}}
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="/cars/edit/{{this.carNumber}}" class="btn btn-secondary btn-sm"><i
+                                        class="fas fa-edit"></i> Sửa</a>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCar('{{this.carNumber}}')"><i
+                                        class="fas fa-trash"></i> Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                    {{else}}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-car-side"></i>
+                                <h3>Chưa có xe nào</h3>
+                                <p>Hãy thêm xe đầu tiên vào hệ thống</p>
+                                <a href="/cars/create" class="btn btn-primary"><i class="fas fa-plus"></i> Thêm xe
+                                    mới</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function deleteCar(carNumber) {
+        if (!confirm('Bạn có chắc chắn muốn xóa xe ' + carNumber + '?')) return;
+        try {
+            var response = await fetch('/cars/' + encodeURIComponent(carNumber), { method: 'DELETE' });
+            var result = await response.json();
+            if (response.ok) {
+                showToast('Đã xóa xe ' + carNumber + ' thành công!', 'success');
+                setTimeout(function () { window.location.reload(); }, 1000);
+            } else {
+                showToast('Lỗi: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Lỗi: ' + error.message, 'error');
+        }
+    }
+</script>
