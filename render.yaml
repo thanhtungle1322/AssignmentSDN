@@ -3,11 +3,9 @@ services:
     name: car-rental-app
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: npm run start:prod
+    buildCommand: npm install && npm run build
+    startCommand: NODE_ENV=production node dist/app.js
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: MONGODB_URI
         sync: false # You will set this manually in Render dashboard
       - key: JWT_SECRET
